@@ -1,4 +1,5 @@
 import scrapy
+from bs4 import BeautifulSoup as bs
 
 
 class Bayut1Spider(scrapy.Spider):
