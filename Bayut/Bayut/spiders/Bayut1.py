@@ -12,6 +12,9 @@ class Bayut1Spider(scrapy.Spider):
             url = f"https://www.bayut.com/property/details-{property_id}.html"
             yield scrapy.Request(url=url, callback=self.parse)
 
+    def parse(self, response):
+        soup = bs(response.text, 'html.parser')
+
 
     
         
