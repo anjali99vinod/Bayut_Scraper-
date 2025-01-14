@@ -40,3 +40,64 @@ class Bayut1Spider(scrapy.Spider):
         description = self.get_text(soup.select_one('html>body>div:nth-of-type(1)>main>div:nth-of-type(2)>div:nth-of-type(4)>div:nth-of-type(3)>div:nth-of-type(1)>div>div:nth-of-type(1)>div:nth-of-type(1)'))
         property_image_urls = self.get_image_urls(soup.select_one('html>body>div:nth-of-type(1)>main>div:nth-of-type(2)>div:nth-of-type(2)>div'))
         
+        yield {
+            'property_id': property_id,
+            'property_url': property_url,
+            'purpose': purpose,
+            'type': type,                  
+            'added_on': added_on,
+            'furnishing': furnishing,
+            'price': price,
+            'location': location,
+            'bed_bath_size': bed_bath_size,
+            'permit_number': permit_number,
+            'agent_name': agent_name,
+            'primary_image_url': primary_image_url,
+            'breadcrumbs': breadcrumbs,
+            'amenities': amenities,
+            'description': description,
+            'property_image_urls': property_image_urls
+        }
+
+    def get_text(self, element):
+        if element:
+            return element.text.strip()
+        return ''
+
+    def get_image_url(self, element):
+        if element and element.name == 'img':
+            return element.get('src', '')
+        return ''
+
+    def get_image_urls(self, element):
+        if element:
+            images = element.find_all('img')
+            return [img.get('src', '') for img in images if img.get('src')]
+        return []
+
+    def extract_bed_bath_size(self, text):
+        if not text:
+            return {'beds': '', 'baths': '', 'sqft': ''}
+        parts = text.split()
+        result = {'beds': '', 'baths': '', 'sqft': ''}
+        for i, part in enumerate(parts):
+            if part.isdigit() or part.replace('.', '').isdigit():
+                if i + 1 < len(parts):
+                    if 'bed' in parts[i + 1].lower():
+                        result['beds'] = part
+                    elif 'bath' in parts[i + 1].lower():
+                        result['baths'] = part
+                    elif 'sqft' in parts[i + 1].lower():
+                        result['sqft'] = part
+        return result
+
+    import re
+
+    def extract_price(self, text):
+        if not text:
+            return {'currency': '', 'amount': ''}
+        match = re.search(r'([£$€¥AED]+)\s*([\d,]+)', text) # type: ignore
+        if match:
+            currency, amount = match.groups()
+            return {'currency': currency, 'amount': amount.replace(',', '')}
+        return {'currency': '', 'amount': ''}
